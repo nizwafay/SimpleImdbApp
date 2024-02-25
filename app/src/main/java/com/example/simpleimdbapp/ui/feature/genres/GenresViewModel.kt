@@ -24,7 +24,7 @@ class GenresViewModel @Inject constructor(private val imdbRepository: ImdbReposi
         getGenres()
     }
 
-    private fun getGenres() {
+    fun getGenres() {
         viewModelScope.launch {
             imdbRepository.getGenres()
                 .onEach {
