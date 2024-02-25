@@ -10,8 +10,8 @@ import com.example.simpleimdbapp.ui.feature.genres.GenresScreen
 import com.example.simpleimdbapp.ui.feature.movies.MoviesScreen
 
 private const val GENRES_DESTINATION = "genres"
-private const val GENRE_ID_KEY = "genre_id"
-private const val GENRE_NAME_KEY = "genre_name"
+const val GENRE_ID_KEY = "genre_id"
+const val GENRE_NAME_KEY = "genre_name"
 
 private const val MOVIES_DESTINATION = "movies"
 
@@ -35,13 +35,8 @@ fun AppNavigation() {
                 navArgument(GENRE_ID_KEY) { type = NavType.IntType },
                 navArgument(GENRE_NAME_KEY) { type = NavType.StringType },
             )
-        ) { entry ->
-            val genreId = entry.arguments?.getInt(GENRE_ID_KEY)
-            val genreName = entry.arguments?.getString(GENRE_NAME_KEY)
-            MoviesScreen(
-                genreId = genreId,
-                genreName = genreName,
-            ) {
+        ) {
+            MoviesScreen {
                 navController.popBackStack()
             }
         }
