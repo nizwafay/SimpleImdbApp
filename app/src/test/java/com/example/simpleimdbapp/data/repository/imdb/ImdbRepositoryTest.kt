@@ -1,8 +1,11 @@
 package com.example.simpleimdbapp.data.repository.imdb
 
+import com.example.simpleimdbapp.data.api.imdb.GetGenresApiResponse
 import com.example.simpleimdbapp.data.api.imdb.ImdbApiService
 import com.example.simpleimdbapp.domain.model.ApiResponse
 import com.example.simpleimdbapp.domain.model.imdb.Genre
+import io.mockk.coEvery
+import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import okhttp3.MediaType
 import okhttp3.ResponseBody
@@ -10,9 +13,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
-import org.mockito.Mockito.mock
-import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.whenever
 import retrofit2.Response
 
 class ImdbRepositoryTest {
@@ -21,22 +21,23 @@ class ImdbRepositoryTest {
 
     @Before
     fun setup() {
-        apiService = mock()
+        apiService = mockk<ImdbApiService>()
         imdbRepository = ImdbRepository(apiService)
     }
 
     @Test
     fun fetchDataSuccess() = runTest {
         // Given
-        val testData = listOf(
-            Genre(
-                id = 1, "Action",
+        val testData = GetGenresApiResponse(
+            genres = listOf(
+                Genre(
+                    id = 1, "Action",
+                )
             )
         )
 
         // When
-        whenever(apiService.getGenres())
-            .doReturn(Response.success(testData))
+        coEvery { apiService.getGenres() } returns Response.success(testData)
 
         // Then
         imdbRepository.getGenres().collect { result ->
@@ -59,13 +60,10 @@ class ImdbRepositoryTest {
     @Test
     fun fetchDataFailure() = runTest {
         // When
-        whenever(apiService.getGenres())
-            .doReturn(
-                Response.error(
-                    404,
-                    ResponseBody.create(MediaType.get("application/json"), "")
-                )
-            )
+        coEvery { (apiService.getGenres()) } returns Response.error(
+            404,
+            ResponseBody.create(MediaType.get("application/json"), "")
+        )
 
         // Then
         imdbRepository.getGenres().collect { result ->
@@ -88,8 +86,7 @@ class ImdbRepositoryTest {
     @Test
     fun fetchDataException() = runTest {
         // When
-        whenever(apiService.getGenres())
-            .thenThrow(RuntimeException("Test exception"))
+        coEvery { apiService.getGenres() } throws RuntimeException("Test exception")
 
         // Then
         imdbRepository.getGenres().collect { result ->
