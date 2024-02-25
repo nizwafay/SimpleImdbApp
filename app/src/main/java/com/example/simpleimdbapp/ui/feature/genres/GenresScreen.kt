@@ -22,14 +22,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.simpleimdbapp.data.api.imdb.GetGenresApiResponse
 import com.example.simpleimdbapp.domain.model.ApiResponse
+import com.example.simpleimdbapp.domain.model.imdb.Genre
 import com.example.simpleimdbapp.ui.components.ImdbTopAppBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GenresScreen(modifier: Modifier = Modifier, viewModel: GenresViewModel = viewModel()) {
+fun GenresScreen(
+    modifier: Modifier = Modifier,
+    viewModel: GenresViewModel = hiltViewModel(),
+    onNavigateToMoviesScreen: (Genre) -> Unit,
+) {
     val genres by viewModel.genres.collectAsState()
 
     Scaffold(
@@ -47,7 +52,7 @@ fun GenresScreen(modifier: Modifier = Modifier, viewModel: GenresViewModel = vie
                     ) {
                         items((genres as ApiResponse.Success<GetGenresApiResponse>).data.genres) { genre ->
                             GenreButton(genre = genre.name) {
-
+                                onNavigateToMoviesScreen(genre)
                             }
                         }
                     }
@@ -55,7 +60,8 @@ fun GenresScreen(modifier: Modifier = Modifier, viewModel: GenresViewModel = vie
 
                 is ApiResponse.Error -> {
                     Column(
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier
+                            .fillMaxSize()
                             .padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center,
