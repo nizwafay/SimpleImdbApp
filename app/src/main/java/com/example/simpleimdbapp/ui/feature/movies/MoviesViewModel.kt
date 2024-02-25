@@ -1,6 +1,5 @@
 package com.example.simpleimdbapp.ui.feature.movies
 
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -46,7 +45,6 @@ class MoviesViewModel @Inject constructor(
                     page = page,
                     withGenres = genreId.toString()
                 ).collect {
-                    Log.d("mnf", it.toString())
                     when (it) {
                         is ApiResponse.Success -> {
                             canPaginate = it.data.page < it.data.totalPages

@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.simpleimdbapp.domain.model.imdb.MovieSnippet
 import com.example.simpleimdbapp.ui.components.ImdbTopAppBar
 import com.example.simpleimdbapp.ui.components.ListState
 
@@ -42,6 +43,7 @@ import com.example.simpleimdbapp.ui.components.ListState
 fun MoviesScreen(
     modifier: Modifier = Modifier,
     viewModel: MoviesViewModel = hiltViewModel(),
+    onNavigateToMovieDetailScreen: (MovieSnippet) -> Unit,
     onBack: () -> Unit,
 ) {
     val lazyGridListState = rememberLazyGridState()
@@ -85,9 +87,10 @@ fun MoviesScreen(
                         MovieCard(
                             title = movie.title,
                             posterPath = movie.posterPath,
-                        ) {
-
-                        }
+                            onClick = {
+                                onNavigateToMovieDetailScreen(movie)
+                            },
+                        )
                     }
 
                     item(
