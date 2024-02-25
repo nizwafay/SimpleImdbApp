@@ -3,11 +3,11 @@ package com.example.simpleimdbapp.data.repository.imdb
 import com.example.simpleimdbapp.data.api.imdb.ImdbApiService
 import com.example.simpleimdbapp.domain.model.ApiResponse
 import com.example.simpleimdbapp.domain.model.imdb.Genre
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import okhttp3.MediaType
 import okhttp3.ResponseBody
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito.mock
@@ -26,27 +26,39 @@ class ImdbRepositoryTest {
     }
 
     @Test
-    fun fetchDataSuccess() = runBlocking {
+    fun fetchDataSuccess() = runTest {
         // Given
         val testData = listOf(
             Genre(
                 id = 1, "Action",
             )
         )
+
+        // When
         whenever(apiService.getGenres())
             .doReturn(Response.success(testData))
 
-        // When
-        val result = imdbRepository.getGenres()
-
         // Then
-        assertTrue(result is ApiResponse.Success)
-        assertEquals(testData, (result as ApiResponse.Success).data)
+        imdbRepository.getGenres().collect { result ->
+            when (result) {
+                is ApiResponse.Loading -> {
+                    println("Loading state emitted")
+                }
+
+                is ApiResponse.Success -> {
+                    assertEquals(testData, result.data)
+                }
+
+                is ApiResponse.Error -> {
+                    fail()
+                }
+            }
+        }
     }
 
     @Test
-    fun fetchDataFailure() = runBlocking {
-        // Given
+    fun fetchDataFailure() = runTest {
+        // When
         whenever(apiService.getGenres())
             .doReturn(
                 Response.error(
@@ -55,25 +67,45 @@ class ImdbRepositoryTest {
                 )
             )
 
-        // When
-        val result = imdbRepository.getGenres()
-
         // Then
-        assertTrue(result is ApiResponse.Error)
-        assertEquals("Error: 404", (result as ApiResponse.Error).errorMessage)
+        imdbRepository.getGenres().collect { result ->
+            when (result) {
+                is ApiResponse.Loading -> {
+                    println("Loading state emitted")
+                }
+
+                is ApiResponse.Success -> {
+                    fail()
+                }
+
+                is ApiResponse.Error -> {
+                    assertEquals("Error: 404", result.errorMessage)
+                }
+            }
+        }
     }
 
     @Test
-    fun fetchDataException() = runBlocking {
-        // Given
+    fun fetchDataException() = runTest {
+        // When
         whenever(apiService.getGenres())
             .thenThrow(RuntimeException("Test exception"))
 
-        // When
-        val result = imdbRepository.getGenres()
-
         // Then
-        assertTrue(result is ApiResponse.Error)
-        assertEquals("Error: Test exception", (result as ApiResponse.Error).errorMessage)
+        imdbRepository.getGenres().collect { result ->
+            when (result) {
+                is ApiResponse.Loading -> {
+                    println("Loading state emitted")
+                }
+
+                is ApiResponse.Success -> {
+                    fail()
+                }
+
+                is ApiResponse.Error -> {
+                    assertEquals("Error: Test exception", result.errorMessage)
+                }
+            }
+        }
     }
 }
