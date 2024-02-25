@@ -14,8 +14,6 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
@@ -35,8 +33,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.simpleimdbapp.domain.model.imdb.MovieSnippet
+import com.example.simpleimdbapp.ui.components.ErrorComponent
 import com.example.simpleimdbapp.ui.components.ImdbTopAppBar
 import com.example.simpleimdbapp.ui.components.ListState
+import com.example.simpleimdbapp.ui.components.LoadingComponent
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -101,29 +101,13 @@ fun MoviesScreen(
                     ) {
                         when (viewModel.listState) {
                             ListState.ERROR -> {
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center,
-                                ) {
-                                    Text(text = viewModel.errorMessage.value)
-                                    Button(onClick = {
-                                        viewModel.getMovies()
-                                    }) {
-                                        Text(text = "Retry")
-                                    }
+                                ErrorComponent(errorMessage = viewModel.errorMessage.value) {
+                                    viewModel.getMovies()
                                 }
                             }
 
                             ListState.LOADING -> {
-                                Box(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    CircularProgressIndicator()
-                                }
+                                LoadingComponent()
                             }
 
                             else -> {}

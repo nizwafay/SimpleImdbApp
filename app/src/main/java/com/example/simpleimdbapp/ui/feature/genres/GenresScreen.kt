@@ -27,7 +27,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.simpleimdbapp.data.api.imdb.GetGenresApiResponse
 import com.example.simpleimdbapp.domain.model.ApiResponse
 import com.example.simpleimdbapp.domain.model.imdb.Genre
+import com.example.simpleimdbapp.ui.components.ErrorComponent
 import com.example.simpleimdbapp.ui.components.ImdbTopAppBar
+import com.example.simpleimdbapp.ui.components.LoadingComponent
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,29 +62,13 @@ fun GenresScreen(
                 }
 
                 is ApiResponse.Error -> {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center,
-                    ) {
-                        Text(text = (genres as ApiResponse.Error).errorMessage)
-                        Button(onClick = {
-                            viewModel.getGenres()
-                        }) {
-                            Text(text = "Retry")
-                        }
+                    ErrorComponent(errorMessage = (genres as ApiResponse.Error).errorMessage) {
+                        viewModel.getGenres()
                     }
                 }
 
                 is ApiResponse.Loading -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        CircularProgressIndicator()
-                    }
+                    LoadingComponent()
                 }
             }
         }
