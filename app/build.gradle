@@ -57,6 +57,7 @@ dependencies {
     def viewmodel_compose_version = "2.6.1"
     def nav_version = "2.7.7"
     def hilt_nav_compose_version = "1.2.0"
+    def coil_version = "2.6.0"
 
     implementation 'androidx.core:core-ktx:1.8.0'
     implementation platform('org.jetbrains.kotlin:kotlin-bom:1.8.0')
@@ -90,6 +91,9 @@ dependencies {
     testImplementation 'junit:junit:4.13.2'
     testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:$kotlinx_coroutines_test_version"
     testImplementation "io.mockk:mockk:$mockk_version"
+
+    // coil
+    implementation "io.coil-kt:coil-compose:$coil_version"
 
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
