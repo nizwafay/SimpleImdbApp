@@ -1,6 +1,7 @@
 package com.example.simpleimdbapp.ui.feature.moviedetail
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -11,7 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -83,24 +83,68 @@ fun MovieDetailScreen(
             when (movieResponse) {
                 is ApiResponse.Success -> {
                     with((movieResponse as ApiResponse.Success).data) {
-                        Column {
-                            PrimaryInfo(
-                                title = title,
-                                yearRelease = releaseDate.take(4).toInt(),
-                                duration = runtime
-                            )
-                            Synopsis(
-                                posterPath = posterPath,
-                                synopsis = overview
-                            )
-                            Genres(genres = genres)
-                            Reviews(
-                                lazyListState = lazyListState,
-                                listState = viewModel.getReviewsListState,
-                                reviews = viewModel.reviews,
-                                errorMessage = viewModel.getReviewsErrorMessage.value,
-                            ) {
+                        LazyColumn(
+                            state = lazyListState,
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                            contentPadding = PaddingValues(vertical = 16.dp),
+                        ) {
+                            item {
+                                PrimaryInfo(
+                                    modifier.padding(horizontal = 16.dp),
+                                    title = title,
+                                    yearRelease = releaseDate.take(4).toInt(),
+                                    duration = runtime
+                                )
+                                Spacer(modifier.height(16.dp))
+                                Synopsis(
+                                    modifier.padding(horizontal = 16.dp),
+                                    posterPath = posterPath,
+                                    synopsis = overview
+                                )
+                                Spacer(modifier.height(16.dp))
+                                Genres(
+                                    genres = genres,
+                                )
+                            }
 
+                            item {
+                                ReviewsTitle()
+                            }
+
+                            if (viewModel.reviews.size > 0) {
+                                items(viewModel.reviews) { review ->
+                                    ReviewCard(
+                                        modifier.padding(horizontal = 16.dp),
+                                        review = review,
+                                    )
+                                }
+
+                                item(key = viewModel.getReviewsListState) {
+                                    when (viewModel.getReviewsListState) {
+                                        ListState.ERROR -> {
+                                            ErrorComponent(
+                                                errorMessage = viewModel.getReviewsErrorMessage.value,
+                                                onRetry = {
+                                                    viewModel.getMovieReviews()
+                                                })
+                                        }
+
+                                        ListState.LOADING -> {
+                                            LoadingComponent()
+                                        }
+
+                                        else -> {}
+                                    }
+                                }
+                            } else {
+                                item {
+                                    Box(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        Text(text = "No review yet.")
+                                    }
+                                }
                             }
                         }
                     }
@@ -129,7 +173,7 @@ fun PrimaryInfo(
     duration: Int,
 ) {
     Column(
-        modifier = modifier.padding(16.dp)
+        modifier = modifier
     ) {
         Text(
             text = title,
@@ -160,9 +204,7 @@ fun Synopsis(
     synopsis: String,
 ) {
     Row(
-        modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
+        modifier.fillMaxWidth()
     ) {
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
@@ -189,8 +231,8 @@ fun Genres(
 ) {
     LazyRow(
         modifier = modifier,
+        contentPadding = PaddingValues(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
-        contentPadding = PaddingValues(16.dp),
     ) {
         items(genres) {
             SuggestionChip(
@@ -202,13 +244,8 @@ fun Genres(
 }
 
 @Composable
-fun Reviews(
+fun ReviewsTitle(
     modifier: Modifier = Modifier,
-    lazyListState: LazyListState,
-    listState: ListState,
-    reviews: List<Review>,
-    errorMessage: String,
-    onRetry: () -> Unit,
 ) {
     Column(modifier = modifier) {
         Surface(
@@ -221,29 +258,6 @@ fun Reviews(
                 text = "Reviews",
                 style = MaterialTheme.typography.titleMedium,
             )
-        }
-        LazyColumn(
-            state = lazyListState,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(16.dp),
-        ) {
-            items(reviews) { review ->
-                ReviewCard(review = review)
-            }
-
-            item(key = listState) {
-                when (listState) {
-                    ListState.ERROR -> {
-                        ErrorComponent(errorMessage = errorMessage, onRetry = onRetry)
-                    }
-
-                    ListState.LOADING -> {
-                        LoadingComponent()
-                    }
-
-                    else -> {}
-                }
-            }
         }
     }
 }
