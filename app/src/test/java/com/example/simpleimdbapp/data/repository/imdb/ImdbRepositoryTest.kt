@@ -7,7 +7,7 @@ import com.example.simpleimdbapp.domain.model.imdb.Genre
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.ResponseBody
 import org.junit.Assert.assertEquals
 import org.junit.Assert.fail
@@ -62,7 +62,7 @@ class ImdbRepositoryTest {
         // When
         coEvery { (apiService.getGenres()) } returns Response.error(
             404,
-            ResponseBody.create(MediaType.get("application/json"), "")
+            ResponseBody.create("application/json".toMediaType(), "")
         )
 
         // Then
