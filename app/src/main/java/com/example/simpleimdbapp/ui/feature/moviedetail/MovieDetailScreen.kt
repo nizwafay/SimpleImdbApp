@@ -19,6 +19,8 @@ import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -27,8 +29,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.simpleimdbapp.domain.model.ApiResponse
 import com.example.simpleimdbapp.domain.model.imdb.Genre
+import com.example.simpleimdbapp.ui.components.ErrorComponent
 import com.example.simpleimdbapp.ui.components.ImdbTopAppBar
+import com.example.simpleimdbapp.ui.components.LoadingComponent
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,6 +42,8 @@ fun MovieDetailScreen(
     viewModel: MovieDetailViewModel = hiltViewModel(),
     onBack: () -> Unit,
 ) {
+    val movieResponse by viewModel.movie.collectAsState()
+
     Scaffold(
         topBar = {
             ImdbTopAppBar(
@@ -48,28 +55,34 @@ fun MovieDetailScreen(
         modifier = modifier.fillMaxWidth(),
     ) {
         Surface(modifier = Modifier.padding(it)) {
-            Column {
-                PrimaryInfo(
-                    title = "Finding Nemo",
-                    yearRelease = "2003-05-30".take(4).toInt(),
-                    duration = 100
-                )
-                Synopsis(
-                    posterPath = "/eHuGQ10FUzK1mdOY69wF5pGgEf5.jpg",
-                    synopsis = "Nemo, an adventurous young clownfish, is unexpectedly taken from his Great Barrier Reef home to a dentist's office aquarium. It's up to his worrisome father Marlin and a friendly but forgetful fish Dory to bring Nemo home -- meeting vegetarian sharks, surfer dude turtles, hypnotic jellyfish, hungry seagulls, and more along the way."
-                )
-                Genres(
-                    genres = listOf(
-                        Genre(16, "Animation"),
-                        Genre(10751, "Family"),
-                        Genre(16, "Animation"),
-                        Genre(10751, "Family"),
-                        Genre(16, "Animation"),
-                        Genre(10751, "Family"),
-                        Genre(16, "Animation"),
-                        Genre(10751, "Family"),
-                    )
-                )
+            when (movieResponse) {
+                is ApiResponse.Success -> {
+                    with((movieResponse as ApiResponse.Success).data) {
+                        Column {
+                            PrimaryInfo(
+                                title = title,
+                                yearRelease = releaseDate.take(4).toInt(),
+                                duration = runtime
+                            )
+                            Synopsis(
+                                posterPath = posterPath,
+                                synopsis = overview
+                            )
+                            Genres(genres = genres)
+                        }
+                    }
+                }
+
+                is ApiResponse.Error -> {
+                    ErrorComponent(errorMessage = (movieResponse as ApiResponse.Error).errorMessage) {
+                        viewModel.getMovieDetail()
+                    }
+                }
+
+                is ApiResponse.Loading -> {
+                    LoadingComponent()
+                }
+
             }
         }
     }

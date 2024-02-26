@@ -2,6 +2,7 @@ package com.example.simpleimdbapp.data.api.imdb
 
 import retrofit2.Response
 import retrofit2.http.GET
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface ImdbApiService {
@@ -15,4 +16,9 @@ interface ImdbApiService {
         @Query("with_genres") withGenres: String? = null,
         @Query("page") page: Int = 1,
     ): Response<GetMoviesApiResponse>
+
+    @GET("movie/{movieId}")
+    suspend fun getMovieDetail(
+        @Path("movieId") id: Int
+    ): Response<GetMovieDetailApiResponse>
 }
