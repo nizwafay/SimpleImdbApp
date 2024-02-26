@@ -10,8 +10,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -19,9 +23,14 @@ import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
@@ -31,8 +40,10 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.simpleimdbapp.domain.model.ApiResponse
 import com.example.simpleimdbapp.domain.model.imdb.Genre
+import com.example.simpleimdbapp.domain.model.imdb.Review
 import com.example.simpleimdbapp.ui.components.ErrorComponent
 import com.example.simpleimdbapp.ui.components.ImdbTopAppBar
+import com.example.simpleimdbapp.ui.components.ListState
 import com.example.simpleimdbapp.ui.components.LoadingComponent
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -42,6 +53,20 @@ fun MovieDetailScreen(
     viewModel: MovieDetailViewModel = hiltViewModel(),
     onBack: () -> Unit,
 ) {
+    val lazyListState = rememberLazyListState()
+
+    val shouldStartPaginate = remember {
+        derivedStateOf {
+            viewModel.getReviewsCanPaginate && (lazyListState.layoutInfo.visibleItemsInfo.lastOrNull()?.index
+                ?: -9) >= (lazyListState.layoutInfo.totalItemsCount - 6)
+        }
+    }
+
+    LaunchedEffect(key1 = shouldStartPaginate.value) {
+        if (shouldStartPaginate.value && viewModel.getReviewsListState == ListState.IDLE)
+            viewModel.getMovieReviews()
+    }
+
     val movieResponse by viewModel.movie.collectAsState()
 
     Scaffold(
@@ -69,6 +94,14 @@ fun MovieDetailScreen(
                                 synopsis = overview
                             )
                             Genres(genres = genres)
+                            Reviews(
+                                lazyListState = lazyListState,
+                                listState = viewModel.getReviewsListState,
+                                reviews = viewModel.reviews,
+                                errorMessage = viewModel.getReviewsErrorMessage.value,
+                            ) {
+
+                            }
                         }
                     }
                 }
@@ -168,6 +201,82 @@ fun Genres(
     }
 }
 
+@Composable
+fun Reviews(
+    modifier: Modifier = Modifier,
+    lazyListState: LazyListState,
+    listState: ListState,
+    reviews: List<Review>,
+    errorMessage: String,
+    onRetry: () -> Unit,
+) {
+    Column(modifier = modifier) {
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            color = Color.Black,
+            contentColor = Color.White,
+        ) {
+            Text(
+                modifier = Modifier.padding(16.dp),
+                text = "Reviews",
+                style = MaterialTheme.typography.titleMedium,
+            )
+        }
+        LazyColumn(
+            state = lazyListState,
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            contentPadding = PaddingValues(16.dp),
+        ) {
+            items(reviews) { review ->
+                ReviewCard(review = review)
+            }
+
+            item(key = listState) {
+                when (listState) {
+                    ListState.ERROR -> {
+                        ErrorComponent(errorMessage = errorMessage, onRetry = onRetry)
+                    }
+
+                    ListState.LOADING -> {
+                        LoadingComponent()
+                    }
+
+                    else -> {}
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ReviewCard(
+    modifier: Modifier = Modifier,
+    review: Review,
+) {
+    ElevatedCard(modifier = modifier) {
+        Column(modifier = Modifier.padding(8.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = review.author,
+                    style = MaterialTheme.typography.titleSmall,
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = review.updatedAt.take(10),
+                    style = MaterialTheme.typography.labelSmall,
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = review.content,
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
+    }
+}
+
 @Preview
 @Composable
 fun PrimaryInfoPrev() {
@@ -205,6 +314,20 @@ fun GenresPreview() {
                 Genre(10751, "Family"),
                 Genre(16, "Animation"),
                 Genre(10751, "Family"),
+            )
+        )
+    }
+}
+
+@Preview
+@Composable
+fun ReviewCardPreview() {
+    Surface {
+        ReviewCard(
+            review = Review(
+                author = "Dave09",
+                content = "One of the best animated films I have ever seen. Great characters, amusing animation, and laugh-out-loud humor. Also, watch for the little skit shown after the credits. It's all great stuff that simply must be seen.",
+                updatedAt = "2021-06-23T15:57:23.763Z",
             )
         )
     }

@@ -2,6 +2,7 @@ package com.example.simpleimdbapp.data.repository.imdb
 
 import com.example.simpleimdbapp.data.api.imdb.GetGenresApiResponse
 import com.example.simpleimdbapp.data.api.imdb.GetMovieDetailApiResponse
+import com.example.simpleimdbapp.data.api.imdb.GetMovieReviewsApiResponse
 import com.example.simpleimdbapp.data.api.imdb.GetMoviesApiResponse
 import com.example.simpleimdbapp.data.api.imdb.ImdbApiService
 import com.example.simpleimdbapp.data.repository.BaseRepository
@@ -26,5 +27,17 @@ class ImdbRepository @Inject constructor(private val apiService: ImdbApiService)
 
     suspend fun getMovieDetail(id: Int): Flow<ApiResponse<GetMovieDetailApiResponse>> {
         return safeApiCall { apiService.getMovieDetail(id) }
+    }
+
+    suspend fun getMovieReviews(
+        movieId: Int,
+        page: Int = 1
+    ): Flow<ApiResponse<GetMovieReviewsApiResponse>> {
+        return safeApiCall {
+            apiService.getMovieReviews(
+                movieId = movieId,
+                page = page,
+            )
+        }
     }
 }

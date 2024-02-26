@@ -21,4 +21,11 @@ interface ImdbApiService {
     suspend fun getMovieDetail(
         @Path("movieId") id: Int
     ): Response<GetMovieDetailApiResponse>
+
+    @GET("movie/{movieId}/reviews")
+    suspend fun getMovieReviews(
+        @Path("movieId") movieId: Int,
+        @Query("language") language: String = "en",
+        @Query("page") page: Int = 1,
+    ): Response<GetMovieReviewsApiResponse>
 }
